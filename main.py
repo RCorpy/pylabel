@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow
 from PyQt5.QtGui import QIcon
 
 from docx import Document
-from docx.shared import Inches
+from docx.shared import Inches, Pt
 
 
 
@@ -15,19 +15,19 @@ def window():
     win.setWindowTitle = "Label maker"
     win.setWindowIcon(QIcon("icon.jpg"))
 
-    lbl_name = QtWidgets.QLabel(win)
-    lbl_name.setText("Enter name: ")
-    lbl_name.move(50,50)
+    lbl_titulo = QtWidgets.QLabel(win)
+    lbl_titulo.setText("Titulo: ")
+    lbl_titulo.move(50,50)
 
-    lbl_surname = QtWidgets.QLabel(win)
-    lbl_surname.setText("Enter surname: ")
-    lbl_surname.move(50,90)
+    lbl_surtitulo = QtWidgets.QLabel(win)
+    lbl_surtitulo.setText("Enter surtitulo: ")
+    lbl_surtitulo.move(50,90)
 
-    txt_name = QtWidgets.QLineEdit(win)
-    txt_name.move(200,50)
+    txt_titulo = QtWidgets.QLineEdit(win)
+    txt_titulo.move(200,50)
 
-    txt_surname = QtWidgets.QLineEdit(win)
-    txt_surname.move(200,90)
+    txt_surtitulo = QtWidgets.QLineEdit(win)
+    txt_surtitulo.move(200,90)
 
     def clicked(self):
         print("button clicked")
@@ -54,15 +54,32 @@ def window():
         
     def loadClicked():
         print("load clicked")
-        #print(txt_name.text() + " " + txt_surname.text())
-        document = Document("mytest.docx")
-        document.paragraphs[0].text = "YEAH"
-        print(document.paragraphs[0].text)
+        #print(txt_titulo.text() + " " + txt_surtitulo.text())
+        document = Document("og.docx")
+        #document.paragraphs[0].text = "YEAH"
+        #print(document.paragraphs[0].text)
         #fullText = []
         #for para in document.paragraphs:
         #    print("hi")
         #    fullText.append(para.text)
         #print('\n'.join(fullText))
+        table = document.tables[0]
+
+        titlerun = table.cell(1,0).add_paragraph().add_run()
+        font = titlerun.font
+        font.name = "Arial Black"
+        font.size = Pt(18)
+        titlerun.add_text(txt_titulo.text())
+
+        # second part
+        titlerun2 = table.cell(1,0).add_paragraph().add_run()
+        font2 = titlerun2.font
+        font2.name = "Arial"
+        font2.size = Pt(7)
+        titlerun2.add_text(txt_titulo.text())
+        print("done")
+
+        document.save("out.docx")
 
     btn_save = QtWidgets.QPushButton(win)
     btn_save.move(200,180)

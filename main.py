@@ -1,7 +1,12 @@
 import sys
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QApplication, QMainWindow, QListWidget, QListWidgetItem, QAbstractItemView, QVBoxLayout, QPushButton, QLabel, QLineEdit, QWidget, QMessageBox, QHBoxLayout
+from PyQt5.QtWidgets import QApplication, QMainWindow,QComboBox, QListWidget, QListWidgetItem, QAbstractItemView, QVBoxLayout, QPushButton, QLabel, QLineEdit, QWidget, QMessageBox, QHBoxLayout
 from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import QDate, Qt
+from indicaciones import indicaciones
+from pictogramas import pictogramas
+from docx import Document
+from docx.shared import Inches, Pt
 
 def window():
     app = QApplication(sys.argv)
@@ -37,6 +42,7 @@ def window():
     left_layout.addWidget(lbl_fecha)
     
     txt_fecha = QLineEdit()
+    txt_fecha.setText(QDate.currentDate().toString("dd/MM/yyyy"))
     left_layout.addWidget(txt_fecha)
 
     lbl_kgs = QLabel("Kgs:")
@@ -44,6 +50,28 @@ def window():
     
     txt_kgs = QLineEdit()
     left_layout.addWidget(txt_kgs)
+
+    #Añadir txt_peligrosidad (selector multiple)
+
+    palabras_advertencia = [
+    "",
+    "Peligro",
+    "Peligro grave",
+    "Atención",
+    "Advertencia",
+    "Precaución"
+]
+
+    lbl_advertencia_text = "Advertencia:"
+    lbl_advertencia = QLabel(lbl_advertencia_text)
+    left_layout.addWidget(lbl_advertencia)
+
+    txt_advertencia = QComboBox()
+    
+    for advertencia_item in palabras_advertencia:
+        txt_advertencia.addItem(advertencia_item)
+    
+    left_layout.addWidget(txt_advertencia)
 
     # Añadir txt_contiene (selector múltiple)
     lbl_contiene_text = "Contiene:"
@@ -54,12 +82,13 @@ def window():
     txt_contiene.setSelectionMode(QAbstractItemView.MultiSelection)
     txt_contiene.setMaximumHeight(100)
     
-    contiene_items = ["Componente 1", "Componente 2", "Componente 3", "Componente 4", "Componente 5"]
+    contiene_items = ["alcohol bencílico", "3-aminometil-3,5,5-trimetilciclohexilamina"]
     for contiene_item in contiene_items:
         contiene_list_item = QListWidgetItem(contiene_item)
         txt_contiene.addItem(contiene_list_item)
     
     left_layout.addWidget(txt_contiene)
+
 
     # Añadir txt_UNnumber (campo de texto)
     lbl_UNnumber_text = "UN Number:"
@@ -79,8 +108,7 @@ def window():
     txt_precauciones = QListWidget()
     txt_precauciones.setSelectionMode(QAbstractItemView.MultiSelection)
     
-    items = ["Elemento 1", "Elemento 2", "Elemento 3", "Elemento 4", "Elemento 5"]
-    for item in items:
+    for item in indicaciones:
         list_item = QListWidgetItem(item)
         txt_precauciones.addItem(list_item)
     
@@ -94,8 +122,7 @@ def window():
     txt_img = QListWidget()
     txt_img.setSelectionMode(QAbstractItemView.MultiSelection)
     
-    img_items = ["Imagen 1", "Imagen 2", "Imagen 3", "Imagen 4", "Imagen 5"]
-    for img_item in img_items:
+    for img_item in pictogramas:
         img_list_item = QListWidgetItem(img_item)
         txt_img.addItem(img_list_item)
     
@@ -126,7 +153,7 @@ def window():
         #table.cell(1,0).text = "1,0"
         #table.cell(1,1).text = "1,1"
         #doc.save('tabletest.docx')
-
+        print(indicaciones["H200"])
         msg = QMessageBox(parent)
         msg.setIcon(QMessageBox.Information)
         msg.setText("Datos guardados correctamente.")
@@ -140,7 +167,7 @@ def window():
     def loadClicked():
         print("load clicked")
         #print(txt_titulo.text() + " " + txt_lote.text())
-        document = Document("og.docx")
+        document = Document("og2.docx")
         #document.paragraphs[0].text = "YEAH"
         #print(document.paragraphs[0].text)
         #fullText = []
@@ -148,7 +175,11 @@ def window():
         #    print("hi")
         #    fullText.append(para.text)
         #print('\n'.join(fullText))
+
+
         table = document.tables[0]
+
+        # Title Cell (1,0)
 
         titlerun = table.cell(1,0).add_paragraph().add_run()
         font = titlerun.font
@@ -156,14 +187,53 @@ def window():
         font.size = Pt(18)
         titlerun.add_text(txt_titulo.text())
 
-        # second part
+        # Title Cell (1,0) second part
         titlerun2 = table.cell(1,0).add_paragraph().add_run()
         font2 = titlerun2.font
         font2.name = "Arial"
         font2.size = Pt(7)
-        titlerun2.add_text(txt_lote.text())
+        titlerun2.add_text("Nº LOTE: "+ txt_lote.text() + "               FECHA: " + txt_fecha.text() +"                             KG: " + txt_kgs.text() )
         print("done")
 
+        #Indicaciones Cell (2,0)
+        this_run = ""
+        #Peligrosidad
+        if(txt_advertencia.currentText()!=""):
+            this_run = table.cell(2,0).add_paragraph().add_run()
+            this_run.add_text(txt_advertencia.currentText())
+            this_run.font.size = Pt(11)
+
+
+        #Indicaciones
+        
+        for selection in txt_precauciones.selectedItems():
+            this_run = table.cell(2,0).add_paragraph().add_run()
+            this_run.add_text(selection.text() + ": " + indicaciones[selection.text()])
+            this_run.font.size = Pt(7)
+
+        #Meter imagenes
+
+        for img_name in txt_img.selectedItems():
+            print(img_name.text())
+            document.add_picture(img_name.text()+ ".png", width=Inches(1.26))
+
+        #UN number Cell (3,1)
+        this_run = table.cell(3,1).add_paragraph().add_run()
+        this_run.add_text("  UN" + txt_UNnumber.text())
+        this_run.font.size = Pt(18)
+        this_run.font.name = "Arial Black"
+
+        #Contiene Cell (3,0)
+        this_run = table.cell(3,0).add_paragraph().add_run()
+        this_run.add_text("Contiene: ")
+        this_run.font.size = Pt(8)
+        for selection in txt_contiene.selectedItems():
+            this_run = table.cell(3,0).add_paragraph().add_run()
+            this_run.add_text(selection.text())
+            this_run.font.size = Pt(6)
+
+    
+        #Guardar documento
         document.save("out.docx")
 
 

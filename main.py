@@ -215,7 +215,7 @@ def window():
 
         for img_name in txt_img.selectedItems():
             print(img_name.text())
-            document.add_picture(img_name.text()+ ".png", width=Inches(1.26))
+            document.add_picture("pictogramas/"+ img_name.text()+ ".png", width=Inches(1.26))
 
         #UN number Cell (3,1)
         this_run = table.cell(3,1).add_paragraph().add_run()
